@@ -542,6 +542,8 @@ def format_typst(article):
             if index < len(items) - 1:
                 lines.append("")
             lines.append("#separator()")
+        lines.append(f"_Zdroj: {escape_typst_text(url)}_")
+        lines.append("")
         return "\n".join(lines).rstrip() + "\n"
 
     body = article.get("body", "") or ""
