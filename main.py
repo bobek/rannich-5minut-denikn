@@ -6,6 +6,7 @@
 # ]
 # ///
 
+import argparse
 import html
 import json
 import re
@@ -579,6 +580,20 @@ def format_typst(article):
 
 if __name__ == "__main__":
     try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "-n",
+            "--dry",
+            action="store_true",
+            help="Skip printing the generated PDF.",
+        )
+        parser.add_argument(
+            "-p",
+            "--printer",
+            default="samsung",
+            help="Printer name passed to lpr.",
+        )
+        args = parser.parse_args()
         latest_url = fetch_latest_overview_url()
         article = fetch_article(latest_url)
         print("Latest overview:")
@@ -592,5 +607,22 @@ if __name__ == "__main__":
             handle.write(format_typst(article))
         print(f"Typst file written: {output_path}")
         subprocess.run(["typst", "compile", output_path], check=True)
+        pdf_path = (
+            f"{output_path[:-4]}.pdf"
+            if output_path.lower().endswith(".typ")
+            else f"{output_path}.pdf"
+        )
+        if not args.dry:
+            subprocess.run(
+                [
+                    "lpr",
+                    "-P",
+                    args.printer,
+                    "-o",
+                    "sides=two-sided-long-edge",
+                    pdf_path,
+                ],
+                check=True,
+            )
     except Exception as e:
         print(f"Error exporting overview: {e}")
