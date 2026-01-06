@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Rannich 5 minut daily at 05:30
+
+[Timer]
+OnCalendar=*-*-* 05:30:00
+Persistent=true
+Unit=rannich-5minut.service
+
+[Install]
+WantedBy=timers.target
+
