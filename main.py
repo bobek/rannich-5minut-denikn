@@ -2,8 +2,6 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "python-escpos",
-#     "pyusb",
 #     "requests",
 # ]
 # ///
@@ -11,15 +9,9 @@
 import html
 import json
 import re
-import textwrap
 from html.parser import HTMLParser
 
 import requests
-from escpos.printer import File
-
-
-def setup_printer():
-    return File(devfile="/tmp/epson", profile="TM-U220B")
 
 
 FEED_URL = "https://denikn.cz/newsletter/rannich-5-minut/feed/"
@@ -347,76 +339,89 @@ def fetch_article(url):
     }
 
 
-def wrap_text(text, width=42):
-    paragraphs = []
-    buffer = []
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            if buffer:
-                paragraphs.append(" ".join(buffer))
-                buffer = []
-            else:
-                paragraphs.append("")
-            continue
-        buffer.append(line)
-    if buffer:
-        paragraphs.append(" ".join(buffer))
-
-    wrapped = []
-    for paragraph in paragraphs:
-        if not paragraph:
-            wrapped.append("")
-            continue
-        indent = ""
-        if re.match(r"^[-*]\s+", paragraph):
-            indent = "  "
-        elif re.match(r"^\d+\.", paragraph):
-            indent = "  "
-        wrapped.append(
-            textwrap.fill(
-                paragraph,
-                width=width,
-                subsequent_indent=indent,
-                break_long_words=False,
-            )
-        )
-    return "\n".join(wrapped).strip()
+def escape_typst_text(text):
+    replacements = {
+        "\\": "\\\\",
+        "*": "\\*",
+        "_": "\\_",
+        "#": "\\#",
+        "[": "\\[",
+        "]": "\\]",
+        "{": "\\{",
+        "}": "\\}",
+    }
+    for key, value in replacements.items():
+        text = text.replace(key, value)
+    return text
 
 
-def wrap_bullet(text, width=42, prefix="- ", indent="  "):
-    return textwrap.fill(
-        text,
-        width=width,
-        initial_indent=prefix,
-        subsequent_indent=indent,
-        break_long_words=False,
+def escape_typst_link_target(text):
+    return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def format_typst(article):
+    title = article.get("title") or "Daily overview"
+    date = article.get("date")
+    url = article.get("url")
+    items = article.get("items") or []
+    lines = []
+
+    lines.append(
+        """
+#set page(
+  paper: "a4",
+  columns: 2,
+  margin: 1cm,
+  footer: context [
+"""
+        f"  *Ranních 5 minut -- {escape_typst_text(date)}*"
+        """
+    #h(1fr)
+    #counter(page).display(
+      "1/1",
+      both: true,
+    )
+  ]
+)
+
+#set columns(gutter: 12pt)
+
+#let separator(
+  width: 60%,
+  stroke: 0.5pt,
+  top-gap: 1em,
+  bottom-gap: 1em,
+) = {
+  v(top-gap)
+  align(center)[
+    #line(length: width, stroke: stroke)
+  ]
+  v(bottom-gap)
+}
+"""
     )
 
+    lines.append(f"= {escape_typst_text(title)}")
+    if date:
+        lines.append(f"_Published: {escape_typst_text(date)}_")
+    lines.append("")
 
-def format_article_body(article, width=42):
-    items = article.get("items") or []
     if items:
-        parts = []
-        for item in items:
-            item_text = (item.get("text") or "").strip()
-            bullets = item.get("bullets") or []
-            item_lines = []
-            if item_text:
-                item_lines.append(
-                    wrap_bullet(item_text, prefix="", indent="", width=width)
-                )
+        for index, item in enumerate(items):
+            heading = (item.get("text") or "").strip() or "Item"
+            lines.append(f"{escape_typst_text(heading)}")
+            bullets = [b.strip() for b in item.get("bullets") or [] if b.strip()]
             for bullet in bullets:
-                bullet_text = bullet.strip()
-                if not bullet_text:
-                    continue
-                item_lines.append(
-                    wrap_bullet(bullet_text, width=width, prefix="- ", indent="  ")
-                )
-            if item_lines:
-                parts.append("\n".join(item_lines))
-        return "\n\n".join(parts).strip()
-    return wrap_text(article.get("body", ""), width=width)
+                lines.append(f"- {escape_typst_text(bullet)}")
+            if index < len(items) - 1:
+                lines.append("")
+            lines.append("#separator()")
+        return "\n".join(lines).rstrip() + "\n"
+
+    body = article.get("body", "") or ""
+    for line in body.splitlines():
+        lines.append(escape_typst_text(line))
+    return "\n".join(lines).rstrip() + "\n"
 
 
 if __name__ == "__main__":
@@ -428,19 +433,9 @@ if __name__ == "__main__":
         print(article["title"])
         print(article["url"])
         print()
-        print(format_article_body(article, width=33))
-
-        printer = setup_printer()
-        printer.set(align="center", bold=True)
-        printer.text(article["title"] + "\n")
-        if article.get("date"):
-            printer.set(align="left", bold=True)
-            printer.text(article["date"] + "\n")
-        printer.set(align="left", bold=False)
-        printer.text("\n")
-        printer.text(format_article_body(article, width=33) + "\n\n")
-        printer.text(article["url"] + "\n\n")
-        printer.cut()
-        print("Overview printed successfully!")
+        output_path = "rannich-5minut.typ"
+        with open(output_path, "w", encoding="utf-8") as handle:
+            handle.write(format_typst(article))
+        print(f"Typst file written: {output_path}")
     except Exception as e:
-        print(f"Error printing overview: {e}")
+        print(f"Error exporting overview: {e}")
