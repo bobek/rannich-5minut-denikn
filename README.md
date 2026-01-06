@@ -1,8 +1,9 @@
 # Ranních 5 minut
 
-Skript `main.py` stáhne nejnovější vydání newsletteru Ranních 5 minut z denikn.cz,
-vygeneruje Typst soubor, zkompiluje PDF a (pokud není použito `--dry`) pošle na
-na zvolenou tiskárnu přes `lpr`.
+Skript `main.py` stáhne nejnovější vydání newsletteru Ranních 5 minut z
+[denikn.cz](https://denikn.cz/newsletter/rannich-5-minut/), vygeneruje Typst
+soubor, zkompiluje PDF a (pokud není použito `--dry`) pošle na na zvolenou
+tiskárnu přes `lpr`.
 
 Tento kód byl skoro stoprocentně vibekodován :)
 
