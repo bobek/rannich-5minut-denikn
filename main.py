@@ -9,6 +9,7 @@
 import html
 import json
 import re
+import subprocess
 from datetime import date as date_type
 from datetime import datetime
 from html.parser import HTMLParser
@@ -443,6 +444,30 @@ def escape_typst_link_target(text):
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def extract_date_only(date_value):
+    if not date_value:
+        return None
+    if isinstance(date_value, datetime):
+        return date_value.date().isoformat()
+    if isinstance(date_value, date_type):
+        return date_value.isoformat()
+    if isinstance(date_value, str):
+        text = date_value.strip()
+        if not text:
+            return None
+        match = re.search(r"(\\d{4}-\\d{2}-\\d{2})", text)
+        if match:
+            return match.group(1)
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        try:
+            parsed = datetime.fromisoformat(text)
+        except ValueError:
+            return None
+        return parsed.date().isoformat()
+    return None
+
+
 def czech_weekday(date_value):
     if not date_value:
         return None
@@ -561,9 +586,11 @@ if __name__ == "__main__":
         print(article["title"])
         print(article["url"])
         print()
-        output_path = "rannich-5minut.typ"
+        date_only = extract_date_only(article.get("date")) or "unknown-date"
+        output_path = f"rannich-5minut-{date_only}.typ"
         with open(output_path, "w", encoding="utf-8") as handle:
             handle.write(format_typst(article))
         print(f"Typst file written: {output_path}")
+        subprocess.run(["typst", "compile", output_path], check=True)
     except Exception as e:
         print(f"Error exporting overview: {e}")
