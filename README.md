@@ -13,6 +13,13 @@ sledovat nekonečný proud novinek celý den. Ráno si raději vytisknu stručn�
 shrnutí, v klidu ho projdu, případně si dohledám jen pár opravdu zajímavých
 věcí — a pak už zprávy na zbytek dne vypnu.
 
+## Ukázka
+
+![První strana 2026-01-06](examples/rannich-5minut-2026-01-06-0.png)
+![Druhá strana 2026-01-06](examples/rannich-5minut-2026-01-06-1.png)
+
+[PDF pro 2026-01-06](examples/rannich-5minut-2026-01-06.pdf)
+
 ## Požadavky
 
 - Python 3.12+
