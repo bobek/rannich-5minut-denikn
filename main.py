@@ -260,11 +260,93 @@ class NewsletterMinuteExtractor(HTMLParser):
         return False
 
 
+class NewsletterGroupExtractor(HTMLParser):
+    TARGET_CLASS = "wp-block-dn-newsletter-r5m-group"
+
+    def __init__(self):
+        super().__init__()
+        self.capture_depth = 0
+        self.ignore_depth = 0
+        self.groups = []
+        self.current = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style", "nav", "footer", "header"):
+            self.ignore_depth += 1
+            return
+        if self.ignore_depth:
+            return
+        if self.capture_depth:
+            self.capture_depth += 1
+            self.current.append(self.get_starttag_text())
+            return
+        if tag == "div" and self._has_target_class(attrs):
+            self.capture_depth = 1
+            self.current = [self.get_starttag_text()]
+
+    def handle_startendtag(self, tag, attrs):
+        if self.ignore_depth or not self.capture_depth:
+            return
+        self.current.append(self.get_starttag_text())
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style", "nav", "footer", "header"):
+            self.ignore_depth = max(0, self.ignore_depth - 1)
+            return
+        if self.ignore_depth or not self.capture_depth:
+            return
+        self.current.append(f"</{tag}>")
+        self.capture_depth = max(0, self.capture_depth - 1)
+        if self.capture_depth == 0 and self.current:
+            self.groups.append("".join(self.current))
+            self.current = []
+
+    def handle_data(self, data):
+        if self.ignore_depth or not self.capture_depth:
+            return
+        self.current.append(data)
+
+    def _has_target_class(self, attrs):
+        for key, value in attrs:
+            if key == "class" and value:
+                classes = value.split()
+                return self.TARGET_CLASS in classes
+        return False
+
+
+def extract_newsletter_groups(html_text, limit=None):
+    extractor = NewsletterGroupExtractor()
+    extractor.feed(html_text)
+    groups = extractor.groups
+    if limit is None:
+        return groups
+    try:
+        limit = int(limit)
+    except (TypeError, ValueError):
+        raise ValueError("limit must be an integer or None")
+    if limit <= 0:
+        return []
+    return groups[:limit]
+
+
 def extract_newsletter_minutes(html_text):
+    groups = extract_newsletter_groups(html_text, limit=1)
+    items = []
+    if groups:
+        for group_html in groups:
+            extractor = NewsletterMinuteExtractor()
+            extractor.feed(group_html)
+            extractor.flush_item()
+            items.extend(extractor.items)
+
     extractor = NewsletterMinuteExtractor()
     extractor.feed(html_text)
     extractor.flush_item()
-    return [item for item in extractor.items if item.get("text") or item.get("bullets")]
+    all_items = extractor.items
+
+    items = [item for item in items if item.get("text") or item.get("bullets")]
+    items.extend([item for item in all_items if "Počasí" in item.get("text")])
+    return items
 
 
 def extract_article_text(html_text):
@@ -385,12 +467,16 @@ def format_typst(article):
 )
 
 #set columns(gutter: 12pt)
+#set text(
+  font: "Franklin Gothic FS",
+  size: 10pt,
+)
 
 #let separator(
   width: 60%,
   stroke: 0.5pt,
-  top-gap: 1em,
-  bottom-gap: 1em,
+  top-gap: 0.1em,
+  bottom-gap: 0.1em,
 ) = {
   v(top-gap)
   align(center)[
