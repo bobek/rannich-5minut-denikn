@@ -21,6 +21,7 @@ Volitelné přepínače:
 
 - `-n` / `--dry` – pouze vygeneruje `.typ` a `.pdf`, netiskne
 - `-P` / `--printer` – název tiskárny pro `lpr` (pokud není zadáno, použije se výchozí tiskárna)
+- `-d` / `--date` – ISO datum `YYYY-MM-DD` pro stažení konkrétního vydání (musí být v RSS feedu)
 
 ## „Deployt“ na stroj (XDG‑friendly)
 

@@ -13,13 +13,13 @@ import re
 import subprocess
 from datetime import date as date_type
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
 
 import requests
 
 
 FEED_URL = "https://denikn.cz/newsletter/rannich-5-minut/feed/"
-LISTING_URL = "https://denikn.cz/newsletter/rannich-5-minut/"
 
 DEFAULT_HEADERS = {
     "User-Agent": (
@@ -35,24 +35,24 @@ def http_get(url, timeout=20):
     return response
 
 
-def fetch_latest_overview_url():
-    # Try RSS feed first, then fall back to the listing page.
+def fetch_latest_overview_url(target_date=None):
     try:
         response = http_get(FEED_URL)
-        url = parse_rss_for_latest_link(response.text)
-        if url:
-            return url
-    except Exception:
-        pass
+    except Exception as exc:
+        raise RuntimeError("Could not fetch the RSS feed.") from exc
 
-    response = http_get(LISTING_URL)
-    url = parse_listing_for_latest_link(response.text)
-    if not url:
-        raise RuntimeError("Could not determine the latest newsletter URL.")
-    return url
+    url = parse_rss_for_latest_link(response.text, target_date=target_date)
+    if url:
+        return url
+
+    if target_date:
+        raise RuntimeError(
+            f"No RSS entry found for date {target_date.isoformat()}."
+        )
+    raise RuntimeError("Could not determine the latest newsletter URL from RSS feed.")
 
 
-def parse_rss_for_latest_link(xml_text):
+def parse_rss_for_latest_link(xml_text, target_date=None):
     try:
         import xml.etree.ElementTree as ET
 
@@ -68,19 +68,46 @@ def parse_rss_for_latest_link(xml_text):
 
     for item in channel.findall("item") + channel.findall("{*}item"):
         link = item.findtext("link") or item.findtext("{*}link")
-        if link:
-            return link.strip()
+        if not link:
+            continue
+        if target_date:
+            item_date = parse_rss_item_date(item)
+            if not item_date or item_date != target_date:
+                continue
+        return link.strip()
     return None
 
 
-def parse_listing_for_latest_link(html_text):
-    # Pick the first newsletter link from the listing page.
-    matches = re.findall(
-        r"https?://denikn\.cz/newsletter/\d+[^\"'<>\\s]*",
-        html_text,
-        flags=re.IGNORECASE,
+def parse_rss_item_date(item):
+    date_text = (
+        item.findtext("pubDate")
+        or item.findtext("{*}pubDate")
+        or item.findtext("date")
+        or item.findtext("{*}date")
+        or item.findtext("published")
+        or item.findtext("{*}published")
     )
-    return matches[0].strip() if matches else None
+    if not date_text:
+        return None
+    date_text = date_text.strip()
+    if not date_text:
+        return None
+    try:
+        return datetime.fromisoformat(date_text).date()
+    except ValueError:
+        pass
+    try:
+        return parsedate_to_datetime(date_text).date()
+    except Exception:
+        pass
+    match = re.search(r"\d{4}-\d{2}-\d{2}", date_text)
+    if match:
+        try:
+            return date_type.fromisoformat(match.group(0))
+        except ValueError:
+            return None
+    return None
+
 
 
 def extract_json_ld_article(html_text):
@@ -593,8 +620,20 @@ if __name__ == "__main__":
             default=None,
             help="Printer name passed to lpr (optional).",
         )
+        parser.add_argument(
+            "-d",
+            "--date",
+            default=None,
+            help="ISO date (YYYY-MM-DD) to fetch instead of latest.",
+        )
         args = parser.parse_args()
-        latest_url = fetch_latest_overview_url()
+        target_date = None
+        if args.date:
+            try:
+                target_date = date_type.fromisoformat(args.date)
+            except ValueError as exc:
+                raise RuntimeError("Date must be in ISO format YYYY-MM-DD.") from exc
+        latest_url = fetch_latest_overview_url(target_date=target_date)
         article = fetch_article(latest_url)
         print("Latest overview:")
         print(article["date"])
