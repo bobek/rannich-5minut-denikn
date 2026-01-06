@@ -20,7 +20,7 @@ na zvolenou tiskárnu přes `lpr`.
 Volitelné přepínače:
 
 - `-n` / `--dry` – pouze vygeneruje `.typ` a `.pdf`, netiskne
-- `-p` / `--printer` – název tiskárny pro `lpr`
+- `-P` / `--printer` – název tiskárny pro `lpr` (pokud není zadáno, použije se výchozí tiskárna)
 
 ## „Deployt“ na stroj (XDG‑friendly)
 

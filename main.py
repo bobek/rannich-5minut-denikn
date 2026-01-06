@@ -588,10 +588,10 @@ if __name__ == "__main__":
             help="Skip printing the generated PDF.",
         )
         parser.add_argument(
-            "-p",
+            "-P",
             "--printer",
-            default="samsung",
-            help="Printer name passed to lpr.",
+            default=None,
+            help="Printer name passed to lpr (optional).",
         )
         args = parser.parse_args()
         latest_url = fetch_latest_overview_url()
@@ -613,16 +613,16 @@ if __name__ == "__main__":
             else f"{output_path}.pdf"
         )
         if not args.dry:
-            subprocess.run(
+            lpr_command = ["lpr"]
+            if args.printer:
+                lpr_command.extend(["-P", args.printer])
+            lpr_command.extend(
                 [
-                    "lpr",
-                    "-P",
-                    args.printer,
                     "-o",
                     "sides=two-sided-long-edge",
                     pdf_path,
-                ],
-                check=True,
+                ]
             )
+            subprocess.run(lpr_command, check=True)
     except Exception as e:
         print(f"Error exporting overview: {e}")
