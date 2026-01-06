@@ -9,6 +9,8 @@
 import html
 import json
 import re
+from datetime import date as date_type
+from datetime import datetime
 from html.parser import HTMLParser
 
 import requests
@@ -441,6 +443,42 @@ def escape_typst_link_target(text):
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def czech_weekday(date_value):
+    if not date_value:
+        return None
+    if isinstance(date_value, (datetime, date_type)):
+        day_index = date_value.weekday()
+    elif isinstance(date_value, str):
+        text = date_value.strip()
+        if not text:
+            return None
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        try:
+            parsed = datetime.fromisoformat(text)
+        except ValueError:
+            match = re.search(r"(\\d{4}-\\d{2}-\\d{2})", text)
+            if not match:
+                return None
+            try:
+                parsed = datetime.fromisoformat(match.group(1))
+            except ValueError:
+                return None
+        day_index = parsed.weekday()
+    else:
+        return None
+    names = [
+        "pondělí",
+        "úterý",
+        "středa",
+        "čtvrtek",
+        "pátek",
+        "sobota",
+        "neděle",
+    ]
+    return names[day_index]
+
+
 def format_typst(article):
     title = article.get("title") or "Daily overview"
     date = article.get("date")
@@ -456,7 +494,7 @@ def format_typst(article):
   margin: 1cm,
   footer: context [
 """
-        f"  *Ranních 5 minut -- {escape_typst_text(date)}*"
+        f"  *Ranních 5 minut -- {escape_typst_text(czech_weekday(date))} -- {escape_typst_text(date)}*"
         """
     #h(1fr)
     #counter(page).display(
@@ -489,7 +527,9 @@ def format_typst(article):
 
     lines.append(f"= {escape_typst_text(title)}")
     if date:
-        lines.append(f"_Published: {escape_typst_text(date)}_")
+        lines.append(
+            f"_Vydáno: {escape_typst_text(date)}, {escape_typst_text(czech_weekday(date))}_"
+        )
     lines.append("")
 
     if items:
