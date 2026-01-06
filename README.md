@@ -4,6 +4,15 @@ Skript `main.py` stáhne nejnovější vydání newsletteru Ranních 5 minut z d
 vygeneruje Typst soubor, zkompiluje PDF a (pokud není použito `--dry`) pošle na
 na zvolenou tiskárnu přes `lpr`.
 
+Tento kód byl skoro stoprocentně vibekodován :)
+
+## Proč?
+
+Poslední dobou mě zprávy zahlcují. DenníkN mám rád a důvěřuju mu, ale nechci
+sledovat nekonečný proud novinek celý den. Ráno si raději vytisknu stručné
+shrnutí, v klidu ho projdu, případně si dohledám jen pár opravdu zajímavých
+věcí — a pak už zprávy na zbytek dne vypnu.
+
 ## Požadavky
 
 - Python 3.12+
