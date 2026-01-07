@@ -46,9 +46,7 @@ def fetch_latest_overview_url(target_date=None):
         return url
 
     if target_date:
-        raise RuntimeError(
-            f"No RSS entry found for date {target_date.isoformat()}."
-        )
+        raise RuntimeError(f"No RSS entry found for date {target_date.isoformat()}.")
     raise RuntimeError("Could not determine the latest newsletter URL from RSS feed.")
 
 
@@ -107,7 +105,6 @@ def parse_rss_item_date(item):
         except ValueError:
             return None
     return None
-
 
 
 def extract_json_ld_article(html_text):
@@ -595,7 +592,7 @@ def format_typst(article):
             if index < len(items) - 1:
                 lines.append("")
             lines.append("#separator()")
-        lines.append(f"_Zdroj: #link(\"{escape_typst_link_target(url)}\")_")
+        lines.append(f'_Zdroj: #link("{escape_typst_link_target(url)}")_')
         lines.append("")
         return "\n".join(lines).rstrip() + "\n"
 
