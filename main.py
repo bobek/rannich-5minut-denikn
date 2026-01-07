@@ -659,6 +659,8 @@ if __name__ == "__main__":
                 [
                     "-o",
                     "sides=two-sided-long-edge",
+                    "-o",
+                    "media=iso_a4_210x297mm",
                     pdf_path,
                 ]
             )
