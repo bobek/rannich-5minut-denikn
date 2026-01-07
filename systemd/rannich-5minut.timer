@@ -1,8 +1,8 @@
 [Unit]
-Description=Run Rannich 5 minut daily at 05:30
+Description=Run Rannich 5 minut daily
 
 [Timer]
-OnCalendar=*-*-* 05:30:00
+OnCalendar=*-*-* 07:01:00
 Persistent=true
 Unit=rannich-5minut.service
 

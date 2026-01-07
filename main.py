@@ -11,6 +11,7 @@ import html
 import json
 import re
 import subprocess
+import time
 from datetime import date as date_type
 from datetime import datetime
 from email.utils import parsedate_to_datetime
@@ -20,6 +21,7 @@ import requests
 
 
 FEED_URL = "https://denikn.cz/newsletter/rannich-5-minut/feed/"
+POLL_INTERVAL_SECONDS = 60 * 5
 
 DEFAULT_HEADERS = {
     "User-Agent": (
@@ -35,6 +37,10 @@ def http_get(url, timeout=20):
     return response
 
 
+class DateNotAvailableError(RuntimeError):
+    pass
+
+
 def fetch_latest_overview_url(target_date=None):
     if target_date is None:
         target_date = date_type.today()
@@ -46,7 +52,9 @@ def fetch_latest_overview_url(target_date=None):
     url = parse_rss_for_latest_link(response.text, target_date=target_date)
     if url:
         return url
-    raise RuntimeError(f"No RSS entry found for date {target_date.isoformat()}.")
+    raise DateNotAvailableError(
+        f"No RSS entry found for date {target_date.isoformat()}."
+    )
 
 
 def parse_rss_for_latest_link(xml_text, target_date):
@@ -621,6 +629,14 @@ if __name__ == "__main__":
             default=None,
             help="ISO date (YYYY-MM-DD) to fetch (defaults to today).",
         )
+        parser.add_argument(
+            "--poll",
+            action="store_true",
+            help=(
+                "Poll the RSS feed until the requested date appears "
+                "(use with today's date)."
+            ),
+        )
         args = parser.parse_args()
         if args.date:
             try:
@@ -629,7 +645,18 @@ if __name__ == "__main__":
                 raise RuntimeError("Date must be in ISO format YYYY-MM-DD.") from exc
         else:
             target_date = date_type.today()
-        overview_url = fetch_latest_overview_url(target_date=target_date)
+        while True:
+            try:
+                overview_url = fetch_latest_overview_url(target_date=target_date)
+                break
+            except DateNotAvailableError:
+                if not args.poll:
+                    raise
+                print(
+                    f"Date {target_date.isoformat()} not yet available; "
+                    f"retrying in {POLL_INTERVAL_SECONDS}s..."
+                )
+                time.sleep(POLL_INTERVAL_SECONDS)
         article = fetch_article(overview_url)
         print(f"Overview for {target_date.isoformat()}:")
         print(article["date"])

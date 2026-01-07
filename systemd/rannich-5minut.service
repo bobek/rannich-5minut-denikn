@@ -4,4 +4,4 @@ Description=Generate and print Rannich 5 minut
 [Service]
 Type=oneshot
 WorkingDirectory=/tmp
-ExecStart=%h/.local/share/rannich-5minut/main.py
+ExecStart=%h/.local/share/rannich-5minut/main.py --poll
