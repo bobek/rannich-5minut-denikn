@@ -36,6 +36,8 @@ def http_get(url, timeout=20):
 
 
 def fetch_latest_overview_url(target_date=None):
+    if target_date is None:
+        target_date = date_type.today()
     try:
         response = http_get(FEED_URL)
     except Exception as exc:
@@ -44,13 +46,10 @@ def fetch_latest_overview_url(target_date=None):
     url = parse_rss_for_latest_link(response.text, target_date=target_date)
     if url:
         return url
-
-    if target_date:
-        raise RuntimeError(f"No RSS entry found for date {target_date.isoformat()}.")
-    raise RuntimeError("Could not determine the latest newsletter URL from RSS feed.")
+    raise RuntimeError(f"No RSS entry found for date {target_date.isoformat()}.")
 
 
-def parse_rss_for_latest_link(xml_text, target_date=None):
+def parse_rss_for_latest_link(xml_text, target_date):
     try:
         import xml.etree.ElementTree as ET
 
@@ -68,10 +67,9 @@ def parse_rss_for_latest_link(xml_text, target_date=None):
         link = item.findtext("link") or item.findtext("{*}link")
         if not link:
             continue
-        if target_date:
-            item_date = parse_rss_item_date(item)
-            if not item_date or item_date != target_date:
-                continue
+        item_date = parse_rss_item_date(item)
+        if not item_date or item_date != target_date:
+            continue
         return link.strip()
     return None
 
@@ -621,18 +619,19 @@ if __name__ == "__main__":
             "-d",
             "--date",
             default=None,
-            help="ISO date (YYYY-MM-DD) to fetch instead of latest.",
+            help="ISO date (YYYY-MM-DD) to fetch (defaults to today).",
         )
         args = parser.parse_args()
-        target_date = None
         if args.date:
             try:
                 target_date = date_type.fromisoformat(args.date)
             except ValueError as exc:
                 raise RuntimeError("Date must be in ISO format YYYY-MM-DD.") from exc
-        latest_url = fetch_latest_overview_url(target_date=target_date)
-        article = fetch_article(latest_url)
-        print("Latest overview:")
+        else:
+            target_date = date_type.today()
+        overview_url = fetch_latest_overview_url(target_date=target_date)
+        article = fetch_article(overview_url)
+        print(f"Overview for {target_date.isoformat()}:")
         print(article["date"])
         print(article["title"])
         print(article["url"])

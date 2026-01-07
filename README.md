@@ -1,6 +1,6 @@
 # Ranních 5 minut
 
-Skript `main.py` stáhne nejnovější vydání newsletteru Ranních 5 minut z
+Skript `main.py` stáhne dnešní vydání newsletteru Ranních 5 minut z
 [denikn.cz](https://denikn.cz/newsletter/rannich-5-minut/), vygeneruje Typst
 soubor, zkompiluje PDF a (pokud není použito `--dry`) pošle na na zvolenou
 tiskárnu přes `lpr`.
@@ -38,7 +38,7 @@ Volitelné přepínače:
 
 - `-n` / `--dry` – pouze vygeneruje `.typ` a `.pdf`, netiskne
 - `-P` / `--printer` – název tiskárny pro `lpr` (pokud není zadáno, použije se výchozí tiskárna)
-- `-d` / `--date` – ISO datum `YYYY-MM-DD` pro stažení konkrétního vydání (musí být v RSS feedu)
+- `-d` / `--date` – ISO datum `YYYY-MM-DD` pro stažení konkrétního vydání (výchozí je dnešní datum; musí být v RSS feedu)
 
 ## „Deployt“ na stroj (XDG‑friendly)
 
