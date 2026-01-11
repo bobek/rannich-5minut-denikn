@@ -2,8 +2,8 @@
 Description=Run Rannich 5 minut daily
 
 [Timer]
-OnCalendar=Mon..Fri *-*-* 07:01:00
-OnCalendar=Sat,Sun *-*-* 08:01:00
+OnCalendar=Mon..Fri *-*-* 07:02:00
+OnCalendar=Sat,Sun *-*-* 08:02:00
 Persistent=true
 Unit=rannich-5minut.service
 
