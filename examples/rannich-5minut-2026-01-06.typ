@@ -1,4 +1,5 @@
 
+#import "@preview/cades:0.3.1": qr-code
 #set page(
   paper: "a4",
   columns: 2,
@@ -145,3 +146,4 @@ Odklad rozšíření systému emisních povolenek finančně pomůže spotřebit
 Počasí: Dnes bude polojasno až jasno. Na severozápadě se ojediněle může objevit slabé sněžení. Nejvyšší teploty se budou pohybovat mezi -7 a -2 °C, v 1000 metrech na horách kolem -8 °C.
 #separator()
 _Zdroj: #link("https://denikn.cz/newsletter/1934206/__trashed-4/")_
+#qr-code("https://denikn.cz/newsletter/1934206/__trashed-4/", width: 2cm)
