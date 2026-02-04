@@ -544,6 +544,7 @@ def format_typst(article):
 
     lines.append(
         """
+#import "@preview/cades:0.3.1": qr-code
 #set page(
   paper: "a4",
   columns: 2,
@@ -599,6 +600,7 @@ def format_typst(article):
                 lines.append("")
             lines.append("#separator()")
         lines.append(f'_Zdroj: #link("{escape_typst_link_target(url)}")_')
+        lines.append(f'#qr-code("{escape_typst_link_target(url)}", width: 2cm)')
         lines.append("")
         return "\n".join(lines).rstrip() + "\n"
 
