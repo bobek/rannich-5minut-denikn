@@ -21,18 +21,7 @@ věcí — a pak už zprávy na zbytek dne vypnu.
 
 [PDF pro 2026-01-06](examples/rannich-5minut-2026-01-06.pdf)
 
-## Požadavky
-
-- Python 3.12+
-- Typst (`typst` v PATH)
-- CUPS/`lpr` (pro tisk)
-- `uv`
-
 ## Spuštění lokálně
-
-```sh
-./main.py
-```
 
 Volitelné přepínače:
 
@@ -41,33 +30,25 @@ Volitelné přepínače:
 - `-d` / `--date` – ISO datum `YYYY-MM-DD` pro stažení konkrétního vydání (výchozí je dnešní datum; musí být v RSS feedu)
 - `--poll` – pokud ještě dnešní (nebo pro datum specifikované pomocí `--date`) vydání není v RSS feedu, periodicky ho kontroluje a čeká (pauza je pevně daná v kódu)
 
-## „Deployt“ na stroj (XDG‑friendly)
+## Instalace
 
-Doporučené umístění projektu:
+### Požadavky
 
-```
-~/.local/share/rannich-5minut
-```
+- Python 3.12+
+- Typst (`typst` v PATH)
+- CUPS/`lpr` (pro tisk)
+- `uv`
 
-Postup:
+### Nasazení
 
 ```sh
 mkdir -p ~/.local/share
 git clone <repo-url> ~/.local/share/rannich-5minut
 ```
 
-Volitelně si vytvořte spustitelný wrapper v `~/.local/bin`:
-
-```sh
-mkdir -p ~/.local/bin
-ln -s ~/.local/share/rannich-5minut/main.py ~/.local/bin/rannich-5minut
-```
-
-Tím zajistíte, že skript je dostupný v PATH (pokud máte `~/.local/bin` v PATH).
-
 ## Systemd user service a timer
 
-Unit soubory patří do XDG lokace:
+Unit soubory patří do (XDG):
 
 ```
 ~/.config/systemd/user
@@ -82,7 +63,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now rannich-5minut.timer
 ```
 
-Timer spouští úlohu každý den v 05:30. Chcete‑li změnit čas, upravte
+Timer spouští úlohu každý den v 07:02. Chcete‑li změnit čas, upravte
 `OnCalendar=` v `~/.config/systemd/user/rannich-5minut.timer`.
 
 ### Volitelná konfigurace tisku
