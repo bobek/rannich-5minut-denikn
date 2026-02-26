@@ -46,7 +46,7 @@ mkdir -p ~/.local/share
 git clone <repo-url> ~/.local/share/rannich-5minut
 ```
 
-## Systemd user service a timer
+### Systemd user service a timer
 
 Unit soubory patří do (XDG):
 
